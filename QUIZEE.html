@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Quiz Game</title>
+<style>
+body { margin:0; overflow:hidden; font-family:'Press Start 2P', monospace; background:#0a0a0a; color:#66ffcc; }
+canvas { position:fixed; top:0; left:0; z-index:-2; }
+.screen { display:none; width:100vw; height:100vh; align-items:center; justify-content:center; flex-direction:column; }
+.active { display:flex; }
+button { cursor:pointer; outline:none; font-family:'Press Start 2P', monospace; }
+
+/* ---------- MENU ---------- */
+h1 { font-size:2rem; margin-bottom:20px; color:#66ffcc; text-shadow:0 0 15px #66ffcc; }
+.menu button { display:block; width:250px; padding:15px; margin:10px 0; border-radius:12px;
+  background:#66ccff; color:#000; font-weight:bold; border:none; transition:0.3s; text-shadow:0 0 3px #fff; }
+.menu button:hover { transform:scale(1.05); box-shadow:0 0 15px #66ccff; }
+
+/* ---------- QUIZ CARD ---------- */
+.card { background: rgba(0,0,0,0.7); padding:25px; border-radius:15px; max-width:500px; width:90%; box-shadow:0 0 20px #66ffcc; text-align:center; animation:cardIn 0.5s ease; }
+@keyframes cardIn { from { transform:translateY(20px); opacity:0;} to { transform:translateY(0); opacity:1;} }
+
+h3 { margin:15px 0; color:#66ffcc; text-shadow:0 0 10px #66ffcc; font-size:1rem; }
+.answers button { display:block; width:100%; padding:12px; margin:8px 0; border-radius:10px;
+  background:#66ccff; color:#000; font-weight:bold; border:none; transition:0.3s; text-shadow:0 0 2px #fff; }
+.answers button:hover { transform:scale(1.03); box-shadow:0 0 10px #66ccff; }
+.correct { background:#66ff66 !important; box-shadow:0 0 15px #66ff66 !important; }
+.wrong { background:#ff6666 !important; box-shadow:0 0 15px #ff6666 !important; }
+
+.tip { margin-top:10px; padding:10px; border-left:4px solid #66ffcc; background: rgba(102,255,204,0.1); color:#66ffcc; text-align:left; font-size:0.7rem; }
+
+/* ---------- HUD ---------- */
+.top-bar { display:flex; justify-content:space-between; margin-bottom:15px; font-size:0.7rem; color:#66ffcc; text-shadow:0 0 5px #66ffcc; }
+
+/* ---------- NEXT BUTTON ---------- */
+#next { margin-top:10px; padding:10px 20px; border-radius:25px; background:#66ffcc; color:#000; border:none; font-weight:bold;
+box-shadow:0 0 10px #66ffcc; transition:0.3s; }
+#next:hover { transform:scale(1.05); box-shadow:0 0 20px #66ffcc; }
+
+/* ---------- RESULT ---------- */
+.result h2 { color:#66ccff; text-shadow:0 0 10px #66ccff; }
+.result button { background:#66ffcc; color:#000; margin-top:10px; font-weight:bold; padding:10px 20px; border-radius:20px; border:none; }
+.result button:hover { transform:scale(1.05); box-shadow:0 0 15px #66ffcc; }
+
+/* ---------- MENU BUTTON ALWAYS VISIBLE ---------- */
+#menuBtn {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+  padding: 8px 15px;
+  border-radius: 20px;
+  background: #66ccff;
+  color: #000;
+  border: none;
+  font-family:'Press Start 2P', monospace;
+  cursor: pointer;
+}
+#menuBtn:hover { box-shadow:0 0 15px #66ccff; }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<!-- MENU -->
+<div id="menu" class="screen active menu">
+  <h1>🚀 Space Quiz Game</h1>
+  <button onclick="start('avl')">AVL Trees</button>
+  <button onclick="start('binary')">Binary Trees</button>
+  <button onclick="start('stack')">Stacks</button>
+  <button onclick="start('queue')">Queues</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="card">
+    <div class="top-bar">
+      <span id="counter">Question 1/10</span>
+      <span id="score">Score: 0</span>
+    </div>
+    <h3 id="question"></h3>
+    <div id="answers" class="answers"></div>
+    <div id="tip"></div>
+    <button id="next" onclick="next()" style="display:none">Next</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen result">
+  <h2 id="final"></h2>
+  <button onclick="menu()">Main Menu</button>
+</div>
+
+<!-- MENU BUTTON ALWAYS VISIBLE -->
+<button id="menuBtn" onclick="menu()">🏠 Menu</button>
+
+<script>
+// ---------- STARFIELD AND METEORS ----------
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let stars = [];
+for(let i=0;i<200;i++){
+  stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, size:Math.random()*1.5+0.5, speed:Math.random()*0.3+0.1, alpha:Math.random()});
+}
+let meteors = [];
+
+function animate(){
+  const grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2,0,canvas.width/2,canvas.height/2,canvas.width);
+  grad.addColorStop(0,"#0a0a0a");
+  grad.addColorStop(1,"#000");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  stars.forEach(s=>{
+    s.y -= s.speed;
+    if(s.y<0) s.y=canvas.height;
+    s.alpha += (Math.random()-0.5)*0.02;
+    if(s.alpha>1) s.alpha=1;
+    if(s.alpha<0.2) s.alpha=0.2;
+    ctx.fillStyle = `rgba(102,255,204,${s.alpha})`;
+    ctx.fillRect(s.x,s.y,s.size,s.size);
+  });
+
+  if(Math.random()<0.008){
+    meteors.push({x:Math.random()*canvas.width, y:canvas.height+20, size:2+Math.random()*2, speed:3+Math.random()*1.5, trail:[]});
+  }
+  meteors.forEach((m,i)=>{
+    m.trail.push({x:m.x,y:m.y});
+    if(m.trail.length>10) m.trail.shift();
+    m.x -= m.speed*0.3; m.y -= m.speed;
+    for(let j=0;j<m.trail.length;j++){
+      const p = m.trail[j];
+      ctx.fillStyle = `rgba(255,165,0,${j/m.trail.length})`;
+      ctx.fillRect(p.x,p.y,m.size*2,m.size/2);
+    }
+    if(m.x<0 || m.y<0) meteors.splice(i,1);
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+window.addEventListener('resize',()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
+
+// ---------- QUIZ DATA (10 QUESTIONS EACH) ----------
+const data = {
+  avl: [
+    {q:"What does AVL stand for?", a:["Adelson-Velsky and Landis","Automatic Variable List","Advanced Virtual Link"], c:0, t:"Named after its inventors."},
+    {q:"AVL trees are a type of?", a:["Binary Search Tree","Heap","Graph"], c:0, t:"AVL trees are height-balanced BSTs."},
+    {q:"Balance factor of a node?", a:["Height(left)-Height(right)","Nodes count","Value diff"], c:0, t:"Balance factor = left height - right height."},
+    {q:"Allowed balance factor range?", a:["-1 to 1","-2 to 2","0 to 2"], c:0, t:"Only -1,0,1 keep tree balanced."},
+    {q:"Which rotation fixes RR imbalance?", a:["Left rotation","Right rotation","Double rotation"], c:0, t:"RR → single left rotation."},
+    {q:"Which rotation fixes LL imbalance?", a:["Right rotation","Left rotation","Double rotation"], c:0, t:"LL → single right rotation."},
+    {q:"Which rotation fixes LR imbalance?", a:["Left-Right rotation","Right rotation","Left rotation"], c:0, t:"LR → left child left rotation then node right rotation."},
+    {q:"Which rotation fixes RL imbalance?", a:["Right-Left rotation","Left rotation","Right rotation"], c:0, t:"RL → right child right rotation then node left rotation."},
+    {q:"Insertion maintains balance by?", a:["Rotations","Swapping nodes","Recomputing heights"], c:0, t:"Rotations rebalance tree after insertion."},
+    {q:"Maximum height of AVL tree?", a:["O(log n)","O(n)","O(n log n)"], c:0, t:"Height is logarithmic, ensuring efficiency."}
+  ],
+  binary: [
+    {q:"Max children in binary tree?", a:["2","3","1"], c:0, t:"Binary nodes have at most 2 children."},
+    {q:"Traversal visiting root first?", a:["Preorder","Inorder","Postorder"], c:0, t:"Preorder visits root first."},
+    {q:"Traversal visiting left-root-right?", a:["Inorder","Preorder","Postorder"], c:0, t:"Inorder gives sorted output in BST."},
+    {q:"Binary tree height depends on?", a:["Levels","Nodes","Edges"], c:0, t:"Height is number of levels."},
+    {q:"Number of leaf nodes?", a:["Nodes with 0 children","Nodes with 1 child","Nodes with 2 children"], c:0, t:"Leaf nodes have 0 children."},
+    {q:"Full binary tree has?", a:["All nodes 0 or 2 children","All nodes 1 child","All leaf nodes same level"], c:0, t:"Full binary tree: 0 or 2 children."},
+    {q:"Complete binary tree?", a:["All levels filled except last","Random nodes","Perfect shape only"], c:0, t:"All levels except last are filled, last left-aligned."},
+    {q:"Height of perfect binary tree?", a:["log₂(n+1)-1","n","2^n"], c:0, t:"Height formula for perfect tree."},
+    {q:"Traversal left-right-root?", a:["Postorder","Inorder","Preorder"], c:0, t:"Postorder visits left-right-root."},
+    {q:"Nodes in subtree called?", a:["Children","Descendants","Ancestors"], c:1, t:"Nodes below are descendants."}
+  ],
+  stack: [
+    {q:"Stack follows?", a:["FIFO","LIFO","Priority"], c:1, t:"Last In First Out."},
+    {q:"Operation to insert?", a:["Push","Pop","Peek"], c:0, t:"Push adds element to top."},
+    {q:"Operation to remove top?", a:["Pop","Push","Peek"], c:0, t:"Pop removes top element."},
+    {q:"Top element without removing?", a:["Peek","Push","Pop"], c:0, t:"Peek returns top without removing."},
+    {q:"Stack implemented using?", a:["Array/Linked list","Heap","Queue"], c:0, t:"Stacks can be array or linked list."},
+    {q:"Real-life example of stack?", a:["Plates","Queue line","Bus stop"], c:0, t:"Plates are LIFO."},
+    {q:"Stack overflow occurs when?", a:["Exceeds memory","Empty","Half full"], c:0, t:"Adding to full stack → overflow."},
+    {q:"Stack underflow?", a:["Removing from empty stack","Pushing full stack","Normal pop"], c:0, t:"Popping empty stack → underflow."},
+    {q:"Time complexity push/pop?", a:["O(1)","O(n)","O(log n)"], c:0, t:"Push/Pop are O(1)."},
+    {q:"Used in function calls?", a:["Call stack","Heap","Queue"], c:0, t:"Call stack stores active function calls."}
+  ],
+  queue: [
+    {q:"Queue follows?", a:["FIFO","LIFO","Priority"], c:0, t:"First In First Out."},
+    {q:"Operation to insert?", a:["Enqueue","Dequeue","Push"], c:0, t:"Enqueue adds element to rear."},
+    {q:"Operation to remove?", a:["Dequeue","Enqueue","Push"], c:0, t:"Dequeue removes front element."},
+    {q:"Circular queue avoids?", a:["Wasted space","Overflow","Underflow"], c:0, t:"Reuses freed spaces efficiently."},
+    {q:"Priority queue orders by?", a:["Priority","Arrival","Random"], c:0, t:"Higher priority elements served first."},
+    {q:"Double-ended queue?", a:["Deque","Stack","Heap"], c:0, t:"Insertion/removal from both ends."},
+    {q:"Queue implemented using?", a:["Array/Linked list","BST","Graph"], c:0, t:"Array or linked list works."},
+    {q:"Real-life example?", a:["Ticket line","Plates stack","Function calls"], c:0, t:"People lining up → FIFO."},
+    {q:"Time complexity enqueue/dequeue?", a:["O(1)","O(n)","O(log n)"], c:0, t:"Efficient queue ops are O(1)."},
+    {q:"Used in BFS traversal?", a:["Queue","Stack","Heap"], c:0, t:"BFS uses queue for level-order traversal."}
+  ]
+};
+
+// ---------- QUIZ LOGIC ----------
+let quiz, i, score;
+
+function start(type){ quiz = data[type]; i=0; score=0; show("quiz"); load(); }
+
+function load(){
+  const q = quiz[i];
+  document.getElementById("counter").textContent=`Question ${i+1}/${quiz.length}`;
+  document.getElementById("score").textContent=`Score: ${score}`;
+  document.getElementById("question").textContent=q.q;
+  const aDiv = document.getElementById("answers"); aDiv.innerHTML="";
+  document.getElementById("tip").innerHTML=""; document.getElementById("next").style.display="none";
+
+  // shuffle answers
+  const answers = q.a.map((text, idx)=>({text, idx}));
+  for(let j=answers.length-1;j>0;j--){
+    const k = Math.floor(Math.random()*(j+1));
+    [answers[j],answers[k]] = [answers[k],answers[j]];
+  }
+  const correctIndex = answers.findIndex(a=>a.idx===q.c);
+
+  answers.forEach((item, idx)=>{
+    const btn = document.createElement("button");
+    btn.textContent = item.text;
+    btn.className = "answer";
+    btn.onclick = ()=>check(btn, idx, correctIndex);
+    aDiv.appendChild(btn);
+  });
+}
+
+function check(btn, idx, correctIdx){
+  document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+  if(idx===correctIdx){ btn.classList.add("correct"); score++; }
+  else { btn.classList.add("wrong"); document.querySelectorAll(".answer")[correctIdx].classList.add("correct"); }
+  document.getElementById("score").textContent=`Score: ${score}`;
+  document.getElementById("tip").innerHTML=`<div class="tip">💡 ${quiz[i].t}</div>`;
+  document.getElementById("next").style.display="block";
+}
+
+function next(){ i++; if(i<quiz.length) load(); else end(); }
+function end(){ show("result"); document.getElementById("final").textContent=`Final Score: ${score} / ${quiz.length}`; }
+function menu(){ show("menu"); }
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); }
+</script>
+</body>
+</html>
