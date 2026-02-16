@@ -1,130 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Space Quiz Game</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>🌟 Data Structures & Algorithms Quiz</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  stack: [
-    { question: "Stack follows which principle?",
-      options: ["FIFO", "LIFO", "Random", "Priority"],
-      answer: 1 },
-
-    { question: "Top of stack refers to:",
-      options: ["First element", "Last inserted element", "Middle element", "Bottom element"],
-      answer: 1 },
-
-    { question: "Stack is used in:",
-      options: ["Recursion", "Queueing", "Sorting only", "Graph traversal only"],
-      answer: 0 },
-
-    { question: "Push operation means:",
-      options: ["Remove element", "Add element", "Search element", "Sort element"],
-      answer: 1 },
-
-    { question: "Pop operation means:",
-      options: ["Add element", "Remove top element", "Peek element", "Sort element"],
-      answer: 1 },
-
-    { question: "Which data structure is used for parentheses checking?",
-      options: ["Queue", "Stack", "Array", "Tree"],
-      answer: 1 },
-
-    { question: "Stack overflow occurs when:",
-      options: ["Stack is empty", "Stack is full", "Stack sorted", "Stack reversed"],
-      answer: 1 },
-
-    { question: "Stack underflow occurs when:",
-      options: ["Stack full", "Stack empty", "Stack sorted", "Stack reversed"],
-      answer: 1 },
-
-    { question: "Peek operation does:",
-      options: ["Deletes top", "Views top element", "Adds element", "Sorts stack"],
-      answer: 1 },
-
-    { question: "Stack is a:",
-      options: ["Linear structure", "Non-linear structure", "Graph", "Tree"],
-      answer: 0 }
-  ],
-
-  queue: [
-    { question: "Queue follows which principle?",
-      options: ["LIFO", "FIFO", "Random", "Priority"],
-      answer: 1 },
-
-    { question: "Front of queue refers to:",
-      options: ["First element", "Last element", "Middle element", "Random element"],
-      answer: 0 },
-
-    { question: "Enqueue operation means:",
-      options: ["Remove element", "Add element", "Sort element", "Search element"],
-      answer: 1 },
-
-    { question: "Dequeue operation means:",
-      options: ["Add element", "Remove element", "Sort element", "Search element"],
-      answer: 1 },
-
-    { question: "Queue is used in:",
-      options: ["Recursion", "Scheduling", "Tree rotation", "AVL balancing"],
-      answer: 1 },
-
-    { question: "Queue underflow occurs when:",
-      options: ["Queue empty", "Queue full", "Queue sorted", "Queue reversed"],
-      answer: 0 },
-
-    { question: "Queue overflow occurs when:",
-      options: ["Queue empty", "Queue full", "Queue sorted", "Queue reversed"],
-      answer: 1 },
-
-    { question: "Circular queue helps to:",
-      options: ["Waste memory", "Reuse memory", "Sort data", "Delete data"],
-      answer: 1 },
-
-    { question: "Queue is a:",
-      options: ["Linear structure", "Non-linear structure", "Tree", "Graph"],
-      answer: 0 },
-
-    { question: "Level order traversal uses:",
-      options: ["Stack", "Queue", "Tree", "Graph"],
-      answer: 1 }
-  ]
 
 <canvas id="bg"></canvas>
 
-<!-- MENU -->
-<div id="menu" class="screen active menu">
-  <h1>🚀 Space Quiz Game</h1>
-  <button onclick="start('avl')">AVL Trees</button>
-  <button onclick="start('binary')">Binary Trees</button>
-  <button onclick="start('stack')">Stacks</button>
-  <button onclick="start('queue')">Queues</button>
-</div>
+<div class="container">
+  <h1>🌈 DS & Algo Quiz Game 🌈</h1>
 
-<!-- QUIZ -->
-<div id="quiz" class="screen">
-  <div class="card">
-    <div class="top-bar">
-      <span id="counter">Question 1/10</span>
-      <span id="score">Score: 0</span>
+  <div id="menu" class="card active">
+    <h2>Choose a Topic</h2>
+    <button onclick="startGame('algorithm')">⚡ Algorithms</button>
+    <button onclick="startGame('datastructure')">🧱 Data Structures</button>
+    <button onclick="startGame('avl')">🌳 AVL Trees</button>
+    <button onclick="startGame('binary')">🌲 Binary Trees</button>
+  </div>
+
+  <div id="quiz" class="card">
+    <div class="top">
+      <span id="progress"></span>
+      <span id="score"></span>
     </div>
-    <h3 id="question"></h3>
-    <div id="answers" class="answers"></div>
-    <div id="tip"></div>
-    <button id="next" onclick="next()" style="display:none">Next</button>
+    <h2 id="question"></h2>
+    <div id="answers"></div>
+    <button id="nextBtn" onclick="nextQuestion()">Next ➜</button>
+  </div>
+
+  <div id="result" class="card">
+    <h2 id="finalScore"></h2>
+    <button onclick="goMenu()">🏠 Back to Menu</button>
   </div>
 </div>
-
-<!-- RESULT -->
-<div id="result" class="screen result">
-  <h2 id="final"></h2>
-  <button onclick="menu()">Main Menu</button>
-</div>
-
-<!-- MENU BUTTON ALWAYS VISIBLE -->
-<button id="menuBtn" onclick="menu()">🏠 Menu</button>
 
 <script src="script.js"></script>
 </body>
